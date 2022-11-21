@@ -1,202 +1,302 @@
-import React from 'react';
-import { styled } from '@mui/material/styles';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell, { tableCellClasses } from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
-import { Box, Button, IconButton, TableFooter, TablePagination } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import PropTypes from 'prop-types';
-import { useTheme } from '@mui/system';
-import LastPageIcon from '@mui/icons-material/LastPage';
-import FirstPageIcon from '@mui/icons-material/FirstPage';
-import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
-import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
-import { theme } from '../theme';
+import React, { useEffect, useState } from "react";
+import Paper from "@mui/material/Paper";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TablePagination from "@mui/material/TablePagination";
+import TableRow from "@mui/material/TableRow";
+import { theme } from "../theme";
+import {
+  Box,
+  Button,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  Stack,
+  styled,
+  TextField,
+  Typography,
+} from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import ReplyIcon from "@mui/icons-material/Reply";
+import { Link } from "react-router-dom";
+import Dialog from "@mui/material/Dialog";
+import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
+import { useForm } from "react-hook-form";
+
+const columns = [
+  { id: "name", label: "الرقم", minWidth: 170, align: "center" },
+  { id: "code", label: "اسم الدورة", minWidth: 100, align: "center" },
+  {
+    id: "population",
+    label: "اسم المادة",
+    minWidth: 170,
+    align: "center",
+    format: (value) => value.toLocaleString("en-US"),
+  },
+  {
+    id: "size",
+    label: "المرحلة",
+    minWidth: 170,
+    align: "center",
+    format: (value) => value.toLocaleString("en-US"),
+  },
+  {
+    id: "asd",
+    label: "السنة",
+    minWidth: 170,
+    align: "center",
+    format: (value) => value.toFixed(2),
+  },
+  {
+    id: "density",
+    label: "الاجراءات",
+    minWidth: 170,
+    align: "center",
+    format: (value) => value.toFixed(2),
+  },
+];
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
-  [`&.${tableCellClasses.head}`]: {
-    backgroundColor: theme.palette.primary.main,
-    color: theme.palette.common.white,
-  },
-  [`&.${tableCellClasses.body}`]: {
-    fontSize: 14,
-  },
+  backgroundColor: theme.palette.primary.main,
+  color: theme.palette.primary.contrastText,
 }));
 
-const StyledTableRow = styled(TableRow)(({ theme }) => ({
-  '&:nth-of-type(odd)': {
-    backgroundColor: theme.palette.action.hover,
-  },
-  // hide last border
-  '&:last-child td, &:last-child th': {
-    border: 0,
-  },
-}));
-
-function createData(name, calories, fat, carbs, protein) {
-  return { name, calories, fat, carbs, protein };
+function createData(name, code, population, size) {
+  const density = population / size;
+  return { name, code, population, size, density };
 }
 
 const rows = [
-  createData('Frozen yoghurt', 159, 6.0, 24, 4.0),
-  createData('Ice cream sandwich', 237, 9.0, 37, 4.3),
-  createData('Eclair', 262, 16.0, 24, 6.0),
-  createData('Cupcake', 305, 3.7, 67, 4.3),
-  createData('Gingerbread', 356, 16.0, 49, 3.9),
-  createData('hrth', 356, 16.0, 49, 3.9),
-  createData('htr', 356, 16.0, 49, 3.9),
-  createData('afeew', 356, 16.0, 49, 3.9),
-  createData('gvrew', 356, 16.0, 49, 3.9),
+  createData("India", "IN", 1324171354, 3287263),
+  createData("China", "CN", 1403500365, 9596961),
+  createData("Italy", "IT", 60483973, 301340),
+  createData("United States", "US", 327167434, 9833520),
+  createData("Canada", "CA", 37602103, 9984670),
+  createData("Australia", "AU", 25475400, 7692024),
+  createData("Germany", "DE", 83019200, 357578),
+  createData("Ireland", "IE", 4857000, 70273),
+  createData("Mexico", "MX", 126577691, 1972550),
+  createData("Japan", "JP", 126317000, 377973),
+  createData("France", "FR", 67022000, 640679),
+  createData("United Kingdom", "GB", 67545757, 242495),
+  createData("Russia", "RU", 146793744, 17098246),
+  createData("Nigeria", "NG", 200962417, 923768),
+  createData("Brazil", "BR", 210147125, 8515767),
 ];
-
-// PAGINATION
-function TablePaginationActions(props) {
-  const theme = useTheme();
-  const { count, page, rowsPerPage, onPageChange } = props;
-
-  const handleFirstPageButtonClick = (event) => {
-    onPageChange(event, 0);
-  };
-
-  const handleBackButtonClick = (event) => {
-    onPageChange(event, page - 1);
-  };
-
-  const handleNextButtonClick = (event) => {
-    onPageChange(event, page + 1);
-  };
-
-  const handleLastPageButtonClick = (event) => {
-    onPageChange(event, Math.max(0, Math.ceil(count / rowsPerPage) - 1));
-  };
-
-  return (
-    <Box sx={{ flexShrink: 0, ml: 2.5 }}>
-      <IconButton
-        onClick={handleFirstPageButtonClick}
-        disabled={page === 0}
-        aria-label="first page"
-      >
-        {theme.direction === 'rtl' ? <LastPageIcon /> : <FirstPageIcon />}
-      </IconButton>
-      <IconButton
-        onClick={handleBackButtonClick}
-        disabled={page === 0}
-        aria-label="previous page"
-      >
-        {theme.direction === 'rtl' ? <KeyboardArrowRightIcon /> : <KeyboardArrowLeftIcon />}
-      </IconButton>
-      <IconButton
-        onClick={handleNextButtonClick}
-        disabled={page >= Math.ceil(count / rowsPerPage) - 1}
-        aria-label="next page"
-      >
-        {theme.direction === 'rtl' ? <KeyboardArrowLeftIcon /> : <KeyboardArrowRightIcon />}
-      </IconButton>
-      <IconButton
-        onClick={handleLastPageButtonClick}
-        disabled={page >= Math.ceil(count / rowsPerPage) - 1}
-        aria-label="last page"
-      >
-        {theme.direction === 'rtl' ? <FirstPageIcon /> : <LastPageIcon />}
-      </IconButton>
-    </Box>
-  );
-}
-
-TablePaginationActions.propTypes = {
-  count: PropTypes.number.isRequired,
-  onPageChange: PropTypes.func.isRequired,
-  page: PropTypes.number.isRequired,
-  rowsPerPage: PropTypes.number.isRequired,
-};
 
 const Courses = () => {
   const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
-
-  // Avoid a layout jump when reaching the last page with empty rows.
-  const emptyRows =
-    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [openEdit, setOpenEdit] = React.useState(false);
+  const [openAdd, setOpenAdd] = React.useState(false);
+  const [teacher, setTeacher] = useState("");
+  const [teachers, setTeachers] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [file, setFile] = useState();
+  const { register, handleSubmit } = useForm();
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
 
   const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
+    setRowsPerPage(+event.target.value);
     setPage(0);
   };
 
-  return (
-    <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-    <TableContainer sx={{ maxHeight: 440 }}>
-      <Table stickyHeader aria-label="sticky table">
-        <TableHead>
-          <TableRow>
-            <StyledTableCell>الرقم</StyledTableCell>
-            <StyledTableCell align="center">اسم الدورة</StyledTableCell>
-            <StyledTableCell align="center">اسم المادة</StyledTableCell>
-            <StyledTableCell align="center">المرحلة</StyledTableCell>
-            <StyledTableCell align="center">السنة</StyledTableCell>
-            <StyledTableCell align="center">الاجراءات</StyledTableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-        {(rowsPerPage > 0
-            ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-            : rows
-          ).map((row) => (
-            <StyledTableRow key={row.name}>
-              <StyledTableCell component="th" scope="row">
-                {row.name}
-              </StyledTableCell>
-              <StyledTableCell align="center">{row.calories}</StyledTableCell>
-              <StyledTableCell align="center">{row.fat}</StyledTableCell>
-              <StyledTableCell align="center">{row.carbs}</StyledTableCell>
-              <StyledTableCell align="center">{row.protein}</StyledTableCell>
-              <StyledTableCell align="center">
-                <Button><EditIcon/></Button>
-                <Button sx={{color: theme.palette.danger.main}}><DeleteIcon/></Button>
-              </StyledTableCell>
-            </StyledTableRow>
-          ))}
-          {emptyRows > 0 && (
-            <TableRow style={{ height: 53 * emptyRows }}>
-              <TableCell colSpan={6} />
-            </TableRow>
-          )}
-        </TableBody>
-        {/* <TableFooter>
-          <TableRow>
-            
-          </TableRow>
-        </TableFooter> */}
-      </Table>
-    </TableContainer>
-    <TablePagination
-              rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-              // colSpan={3}
-              count={rows.length}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              SelectProps={{
-                inputProps: {
-                  'aria-label': 'عدد الصفوف في الصفحة',
-                },
-                native: true,
-              }}
-              onPageChange={handleChangePage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-              // ActionsComponent={TablePaginationActions}
-            />
-    </Paper>
-  )
-}
+  useEffect(() => {
+    fetch("https://schools.rescue-palestine.com/api/teacher/all")
+      .then((res) => res.json())
+      .then((data) => setTeachers(data.teachers));
 
-export default Courses
+    fetch("https://schools.rescue-palestine.com/api/subject/all")
+      .then((res) => res.json())
+      .then((data) => setSubjects(data.subjects));
+  }, []);
+
+  return (
+    <div>
+      <Button
+        sx={{ marginBottom: "20px" }}
+        color="success"
+        variant="contained"
+        onClick={() => setOpenAdd(true)}
+      >
+        + إضافة دورة
+      </Button>
+      <Paper sx={{ width: "100%", overflow: "hidden" }}>
+        <TableContainer sx={{ maxHeight: 440 }}>
+          <Table stickyHeader aria-label="sticky table">
+            <TableHead>
+              <TableRow>
+                {columns.map((column) => (
+                  <StyledTableCell
+                    key={column.id}
+                    align={column.align}
+                    style={{ minWidth: column.minWidth }}
+                  >
+                    {column.label}
+                  </StyledTableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <TableRow hover role="checkbox" tabIndex={-1}>
+                <TableCell align="center">شسي</TableCell>
+                <TableCell align="center">شسي</TableCell>
+                <TableCell align="center">شسي</TableCell>
+                <TableCell align="center">شسي</TableCell>
+                <TableCell align="center">شسي</TableCell>
+                <TableCell align="center">
+                  <Button onClick={() => setOpenEdit(true)}>
+                    <EditIcon />
+                  </Button>
+                  <Link to={"1"}>
+                    <Button>
+                      <ReplyIcon />
+                    </Button>
+                  </Link>
+                  <Button color={"danger"}>
+                    <DeleteIcon />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <TablePagination
+          rowsPerPageOptions={[10, 25, 100]}
+          component="div"
+          count={rows.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
+      </Paper>
+      <Dialog open={openAdd} onClose={() => setOpenAdd(false)}>
+        <form
+          onSubmit={handleSubmit((data)=>{
+            const formData = new FormData();
+            formData.append('title', data.title);
+            formData.append('image', file);
+            formData.append('price', parseInt(data.price));
+            formData.append('TeacherId', data.TeacherId);
+            formData.append('SubjectId', data.SubjectId);
+            formData.append('goals', data.goals);
+            console.log(file)
+
+            fetch("https://schools.rescue-palestine.com/api/course/create", {
+              method: "POST",
+              body: formData,
+            })
+              .then((res) => res.json())
+              .then((info) => {
+                console.log(info)
+              })
+              .catch((err) => {
+                console.log(err)
+              });
+          })}
+        >
+          <DialogTitle>إضافة دورة</DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              id="name"
+              label={"اسم الدورة"}
+              type="text"
+              fullWidth
+              variant="standard"
+              {...register("title")}
+            />
+            <TextField
+              autoFocus
+              margin="dense"
+              id="name"
+              label={"هدف الدورة"}
+              type="text"
+              fullWidth
+              variant="standard"
+              {...register("goals")}
+            />
+            <TextField
+              autoFocus
+              margin="dense"
+              id="name"
+              label={"سعر الدورة"}
+              type="number"
+              fullWidth
+              variant="standard"
+              {...register("price")}
+            />
+            <FormControl fullWidth sx={{ marginTop: "20px" }}>
+              <InputLabel id="demo-simple-select-label">اسم المادة</InputLabel>
+              <Select
+                labelId="demo-simple-select-label"
+                id="demo-simple-select"
+                label={"اسم المادة"}
+                {...register('SubjectId')}
+              >
+                {subjects?.map((e, i) => (
+                  <MenuItem key={e.id} value={e.id}>
+                    {e.title}({e.Class.title})({e.Level.title})
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth sx={{ marginTop: "20px" }}>
+              <InputLabel id="demo-simple-select-label">معلم الدورة</InputLabel>
+              <Select
+                labelId="demo-simple-select-label"
+                id="demo-simple-select"
+                label={"معلم الدورة"}
+                {...register("TeacherId")}
+              >
+                {teachers?.map((e, i) => (
+                  <MenuItem key={e.id} value={e.id}>
+                    {e.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Box sx={{ marginTop: "20px" }}>
+              <label>
+                <Stack direction="row" spacing={2}>
+                  <AddPhotoAlternateIcon
+                    sx={{ color: "#18a0fb", fontSize: "30px" }}
+                  />
+                  <Typography variant="p" sx={{ padding: "5px" }}>
+                    إضافة صورة
+                  </Typography>
+                  <input onChange={e=> setFile(e.target.files[0])} style={{ display: "none" }} type={"file"} />
+                </Stack>
+              </label>
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenAdd(false)}>إلغاء</Button>
+            <Button type="submit">موافق</Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+      <Dialog
+        open={openEdit}
+        handleClose={() => setOpenEdit(false)}
+        inputs={["اسم الدورة", "اسم المادة", "المرحلة", "السنة"]}
+        title={"تعديل الدورة"}
+      />
+    </div>
+  );
+};
+
+export default Courses;

@@ -18,7 +18,9 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import { Tooltip } from "@mui/material";
-import { Outlet } from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import LaptopChromebookIcon from '@mui/icons-material/LaptopChromebook';
 
 const drawerWidth = 240;
 
@@ -133,36 +135,65 @@ export default function Main() {
         </DrawerHeader>
         <Divider />
         <List>
-          <ListItem disablePadding sx={{ display: "block" }}>
-            <Tooltip title={open ? '' : 'الدورات'} placement="left">
-              <ListItemButton
-                sx={{
-                  minHeight: 48,
-                  justifyContent: open ? "initial" : "center",
-                  px: 2.5,
-                }}
-              >
-                <ListItemIcon
+          <Link style={{textDecoration: 'none', color: '#000'}} to={"courses"}>
+            <ListItem disablePadding sx={{ display: "block" }}>
+              <Tooltip title={open ? "" : "الدورات"} placement="left">
+                <ListItemButton
                   sx={{
-                    minWidth: 0,
-                    mr: open ? 3 : "auto",
-                    justifyContent: "center",
+                    minHeight: 48,
+                    justifyContent: open ? "initial" : "center",
+                    px: 2.5,
                   }}
                 >
-                  <AutoStoriesIcon />
-                </ListItemIcon>
-                <ListItemText
-                  primary={"الدورات"}
-                  sx={{ opacity: open ? 1 : 0 }}
-                />
-              </ListItemButton>
-            </Tooltip>
-          </ListItem>
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 0,
+                      mr: open ? 3 : "auto",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <AutoStoriesIcon />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={"الدورات"}
+                    sx={{ opacity: open ? 1 : 0 }}
+                  />
+                </ListItemButton>
+              </Tooltip>
+            </ListItem>
+          </Link>
+          <Link style={{textDecoration: 'none', color: '#000'}} to={"subjects"}>
+            <ListItem disablePadding sx={{ display: "block" }}>
+              <Tooltip title={open ? "" : "المواد"} placement="left">
+                <ListItemButton
+                  sx={{
+                    minHeight: 48,
+                    justifyContent: open ? "initial" : "center",
+                    px: 2.5,
+                  }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 0,
+                      mr: open ? 3 : "auto",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <MenuBookIcon />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={"المواد"}
+                    sx={{ opacity: open ? 1 : 0 }}
+                  />
+                </ListItemButton>
+              </Tooltip>
+            </ListItem>
+          </Link>
         </List>
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <DrawerHeader />
-        <Outlet/>
+        <Outlet />
       </Box>
     </Box>
   );

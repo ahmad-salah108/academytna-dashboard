@@ -11,6 +11,9 @@ import {
   Route,
 } from "react-router-dom";
 import Courses from "./pages/Courses";
+import Units from "./pages/Units";
+import Lessons from "./pages/Lessons";
+import Subjects from "./pages/Subjects";
 
 // Create rtl cache
 const cacheRtl = createCache({
@@ -22,11 +25,23 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <Main/>,
-    errorElement: <h1>Page not found 404</h1>,
+    errorElement: <h1 sx={{textAlign: 'center'}}>Page not found 404</h1>,
     children: [
       {
         path: 'courses',
         element: <Courses/>,
+      },
+      {
+        path: 'courses/:CourseId',
+        element: <Units/>,
+      },
+      {
+        path: 'courses/:CourseId/:UnitId',
+        element: <Lessons/>,
+      },
+      {
+        path: 'subjects',
+        element: <Subjects/>,
       },
       {
         path: '*',
