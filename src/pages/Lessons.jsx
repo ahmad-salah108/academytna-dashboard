@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Paper from "@mui/material/Paper";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -7,20 +7,31 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
-import { theme } from "../theme";
-import { Button, styled } from "@mui/material";
+import {
+  Box,
+  Button,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  styled,
+  TextField,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ReplyIcon from "@mui/icons-material/Reply";
-import { Link } from "react-router-dom";
-import Dialog from './../components/Dialog'
+import { Link, useNavigate, useParams } from "react-router-dom";
+import Dialog from "@mui/material/Dialog";
+import { ClipLoader } from "react-spinners";
+import { useForm } from "react-hook-form";
 
 const columns = [
   { id: "name", label: "الرقم", minWidth: 170, align: "center" },
   { id: "code", label: "اسم الدرس", minWidth: 100, align: "center" },
   {
-    id: "population",
-    label: "محتوى الدرس",
+    id: "as",
+    label: "رابط الدرس",
     minWidth: 170,
     align: "center",
   },
@@ -30,20 +41,6 @@ const columns = [
     minWidth: 170,
     align: "center",
   },
-  // {
-  //   id: 'size',
-  //   label: 'المرحلة',
-  //   minWidth: 170,
-  //   align: 'center',
-  //   format: (value) => value.toLocaleString('en-US'),
-  // },
-  // {
-  //   id: 'density',
-  //   label: 'السنة',
-  //   minWidth: 170,
-  //   align: 'center',
-  //   format: (value) => value.toFixed(2),
-  // },
   {
     id: "density",
     label: "الاجراءات",
@@ -85,6 +82,12 @@ const Courses = () => {
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [openEdit, setOpenEdit] = React.useState(false);
   const [openAdd, setOpenAdd] = React.useState(false);
+  const navigate = useNavigate();
+  const params = useParams();
+  const [allLessons, setAllLessons] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [editLesson, setEditLesson] = useState({});
+  const { register, handleSubmit } = useForm();
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -95,11 +98,47 @@ const Courses = () => {
     setPage(0);
   };
 
+  const deleteLesson = (lesson)=>{
+    fetch(`${process.env.REACT_APP_API}/api/lesson/${lesson.id}`, {
+      method: "DELETE",
+    }).then(res => res.json()).then(data => console.log(data)).catch(err => console.log(err))
+  };
+
+  useEffect(() => {
+    setLoading(true)
+    fetch(`${process.env.REACT_APP_API}/api/lesson/unit/${params.UnitId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setAllLessons(data.lessons);
+        setLoading(false);
+      });
+  }, []);
+
   return (
     <div>
-      <Button sx={{ marginBottom: "20px" }} color="success" variant="contained" onClick={() => setOpenAdd(true)}>
-        + إضافة درس
-      </Button>
+      <Typography
+        variant="h3"
+        sx={{ marginBottom: "20px", marginTop: "-16px" }}
+      >
+        الدروس
+      </Typography>
+      <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+        <Button
+          sx={{ marginBottom: "20px" }}
+          color="success"
+          variant="contained"
+          onClick={() => setOpenAdd(true)}
+        >
+          + إضافة درس
+        </Button>
+        <Button
+          sx={{ marginBottom: "20px" }}
+          variant="contained"
+          onClick={() => navigate(-1)}
+        >
+          رجوع
+        </Button>
+      </Box>
       <Paper sx={{ width: "100%", overflow: "hidden" }}>
         <TableContainer sx={{ maxHeight: 440 }}>
           <Table stickyHeader aria-label="sticky table">
@@ -117,41 +156,188 @@ const Courses = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              <TableRow hover role="checkbox" tabIndex={-1}>
-                {/* <TableCell align='center'>
-                          شسي
-                        </TableCell>
-                        <TableCell align='center'>
-                          شسي
-                        </TableCell> */}
-                <TableCell align="center">شسي</TableCell>
-                <TableCell align="center">شسي</TableCell>
-                <TableCell align="center">شسي</TableCell>
-                <TableCell align="center">شسي</TableCell>
-                <TableCell align="center">
-                  <Button onClick={() => setOpenEdit(true)}>
-                    <EditIcon />
-                  </Button>
-                  <Button color={'danger'}>
-                    <DeleteIcon />
-                  </Button>
-                </TableCell>
-              </TableRow>
+              <ClipLoader
+                color={"#18a0fb"}
+                loading={loading}
+                size={80}
+                cssOverride={{
+                  display: "block",
+                  marginInline: "auto",
+                  borderWidth: "5px",
+                }}
+                aria-label="Loading Spinner"
+                data-testid="loader"
+              />
+              {allLessons
+                ?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((e, i) => (
+                  <TableRow key={i+'qw'} hover role="checkbox" tabIndex={-1}>
+                    <TableCell align="center">{e.id}</TableCell>
+                    <TableCell align="center">{e.title}</TableCell>
+                    <TableCell align="center">{e.videoUrl}</TableCell>
+                    <TableCell align="center">{e.content}</TableCell>
+                    <TableCell align="center">
+                      <Tooltip title={"تعديل الدرس"} placement="bottom">
+                        <Button onClick={() => {
+                          setEditLesson(e);
+                          setOpenEdit(true);
+                        }}>
+                          <EditIcon />
+                        </Button>
+                      </Tooltip>
+                      <Tooltip title={"حذف الدرس"} placement="bottom">
+                        <Button onClick={() => deleteLesson(e)} color={"danger"}>
+                          <DeleteIcon />
+                        </Button>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         </TableContainer>
         <TablePagination
           rowsPerPageOptions={[10, 25, 100]}
           component="div"
-          count={rows.length}
+          count={allLessons.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Paper>
-      <Dialog open={openAdd} handleClose={() => setOpenAdd(false)} inputs={['اسم الدرس', 'محتوى الدرس', 'وصف الدرس']} title={'إضافة درس'}/>
-      <Dialog open={openEdit} handleClose={() => setOpenEdit(false)} inputs={['اسم الدرس', 'محتوى الدرس', 'وصف الدرس']} title={'تعديل درس'}/>
+      <Dialog open={openAdd} onClose={() => setOpenAdd(false)}>
+        <form
+          onSubmit={handleSubmit((data) => {
+            fetch(`${process.env.REACT_APP_API}/api/lesson/create`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                title: data.name,
+                UnitId: params.UnitId,
+                videoUrl: data.url,
+                content: data.describe,
+              }),
+            })
+              .then((res) => res.json())
+              .then((info) => {
+                console.log(info);
+              })
+              .catch((err) => {
+                console.log(err);
+              });
+          })}
+        >
+          <DialogTitle>إضافة درس</DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              id="name"
+              label={"اسم الدرس"}
+              type="text"
+              fullWidth
+              variant="standard"
+              {...register("name")}
+            />
+            <TextField
+              autoFocus
+              margin="dense"
+              id="name"
+              label={"رابط الدرس"}
+              type="text"
+              fullWidth
+              variant="standard"
+              {...register("url")}
+            />
+            <TextField
+              autoFocus
+              margin="dense"
+              id="name"
+              label={"وصف الدرس"}
+              type="text"
+              fullWidth
+              variant="standard"
+              {...register("describe")}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenAdd(false)}>إلغاء</Button>
+            <Button type="submit" onClick={() => setOpenAdd(false)}>
+              موافق
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+      <Dialog open={openEdit} onClose={() => setOpenEdit(false)}>
+        <form
+          onSubmit={handleSubmit((data) => {
+            fetch(`${process.env.REACT_APP_API}/api/lesson/${editLesson.id}`, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                title: data.editName,
+                videoUrl: data.editUrl,
+                content: data.editDescribe,
+              }),
+            })
+              .then((res) => res.json())
+              .then((info) => {
+                console.log(info);
+              })
+              .catch((err) => {
+                console.log(err);
+              });
+          })}
+        >
+          <DialogTitle>تعديل الدرس</DialogTitle>
+          <DialogContent>
+          <TextField
+              autoFocus
+              margin="dense"
+              id="name"
+              label={"اسم الدرس"}
+              type="text"
+              fullWidth
+              defaultValue={editLesson.title}
+              variant="standard"
+              {...register("editName")}
+              />
+            <TextField
+              autoFocus
+              margin="dense"
+              id="name"
+              label={"رابط الدرس"}
+              type="text"
+              fullWidth
+              defaultValue={editLesson.videoUrl}
+              variant="standard"
+              {...register("editUrl")}
+              />
+            <TextField
+              autoFocus
+              margin="dense"
+              id="name"
+              label={"وصف الدرس"}
+              type="text"
+              fullWidth
+              defaultValue={editLesson.content}
+              variant="standard"
+              {...register("editDescribe")}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenEdit(false)}>إلغاء</Button>
+            <Button type="submit" onClick={() => setOpenEdit(false)}>
+              موافق
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
     </div>
   );
 };

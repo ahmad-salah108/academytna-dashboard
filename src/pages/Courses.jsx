@@ -21,6 +21,7 @@ import {
   Stack,
   styled,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
@@ -30,6 +31,7 @@ import { Link } from "react-router-dom";
 import Dialog from "@mui/material/Dialog";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import { useForm } from "react-hook-form";
+import { ClipLoader } from "react-spinners";
 
 const columns = [
   { id: "name", label: "الرقم", minWidth: 170, align: "center" },
@@ -97,10 +99,12 @@ const Courses = () => {
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [openEdit, setOpenEdit] = React.useState(false);
   const [openAdd, setOpenAdd] = React.useState(false);
-  const [teacher, setTeacher] = useState("");
   const [teachers, setTeachers] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [file, setFile] = useState();
+  const [allCourses, setAllCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [editCourse, setEditCourse] = useState({});
   const { register, handleSubmit } = useForm();
 
   const handleChangePage = (event, newPage) => {
@@ -112,18 +116,37 @@ const Courses = () => {
     setPage(0);
   };
 
+  const deleteCourse = (course)=>{
+    fetch(`${process.env.REACT_APP_API}/api/course/${course.id}`, {
+      method: "DELETE",
+    }).then(res => res.json()).then(data => console.log(data)).catch(err => console.log(err))
+  };
+
   useEffect(() => {
-    fetch("https://schools.rescue-palestine.com/api/teacher/all")
+    fetch(`${process.env.REACT_APP_API}/api/teacher/all`)
       .then((res) => res.json())
       .then((data) => setTeachers(data.teachers));
 
-    fetch("https://schools.rescue-palestine.com/api/subject/all")
+    fetch(`${process.env.REACT_APP_API}/api/subject/all`)
       .then((res) => res.json())
       .then((data) => setSubjects(data.subjects));
+
+    fetch(`${process.env.REACT_APP_API}/api/course/all`)
+      .then((res) => res.json())
+      .then((data) => {
+        setAllCourses(data.courses);
+        setLoading(false);
+      });
   }, []);
 
   return (
     <div>
+      <Typography
+        variant="h3"
+        sx={{ marginBottom: "20px", marginTop: "-16px" }}
+      >
+        الدورات
+      </Typography>
       <Button
         sx={{ marginBottom: "20px" }}
         color="success"
@@ -149,61 +172,89 @@ const Courses = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              <TableRow hover role="checkbox" tabIndex={-1}>
-                <TableCell align="center">شسي</TableCell>
-                <TableCell align="center">شسي</TableCell>
-                <TableCell align="center">شسي</TableCell>
-                <TableCell align="center">شسي</TableCell>
-                <TableCell align="center">شسي</TableCell>
-                <TableCell align="center">
-                  <Button onClick={() => setOpenEdit(true)}>
-                    <EditIcon />
-                  </Button>
-                  <Link to={"1"}>
-                    <Button>
-                      <ReplyIcon />
-                    </Button>
-                  </Link>
-                  <Button color={"danger"}>
-                    <DeleteIcon />
-                  </Button>
-                </TableCell>
-              </TableRow>
+              <ClipLoader
+                color={"#18a0fb"}
+                loading={loading}
+                size={80}
+                cssOverride={{
+                  display: "block",
+                  marginInline: "auto",
+                  borderWidth: "5px",
+                }}
+                aria-label="Loading Spinner"
+                data-testid="loader"
+              />
+              {allCourses
+                ?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((e, i) => (
+                  <TableRow key={i+'a'} hover role="checkbox" tabIndex={-1}>
+                    <TableCell align="center">{e.id}</TableCell>
+                    <TableCell align="center">{e.title}</TableCell>
+                    <TableCell align="center">{e.Subject.title}</TableCell>
+                    <TableCell align="center">{e.Level.title}</TableCell>
+                    <TableCell align="center">{e.Class.title}</TableCell>
+                    <TableCell align="center">
+                      <Tooltip title={"تعديل الدورة"} placement="bottom">
+                        <Button onClick={() => {
+                          setEditCourse(e);
+                          setOpenEdit(true)
+                          }}>
+                          <EditIcon />
+                        </Button>
+                      </Tooltip>
+                      <Tooltip
+                        title={"الانتقال الى وحدة الدورة"}
+                        placement="bottom"
+                      >
+                        <Link to={`${e.id}`}>
+                          <Button>
+                            <ReplyIcon />
+                          </Button>
+                        </Link>
+                      </Tooltip>
+                      <Tooltip title={"حذف الدورة"} placement="bottom">
+                        <Button onClick={()=>deleteCourse(e)} color={"danger"}>
+                          <DeleteIcon />
+                        </Button>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         </TableContainer>
         <TablePagination
           rowsPerPageOptions={[10, 25, 100]}
           component="div"
-          count={rows.length}
+          count={allCourses.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Paper>
+      {/* ADD DIALOG */}
       <Dialog open={openAdd} onClose={() => setOpenAdd(false)}>
         <form
-          onSubmit={handleSubmit((data)=>{
+          onSubmit={handleSubmit((data) => {
             const formData = new FormData();
-            formData.append('title', data.title);
-            formData.append('image', file);
-            formData.append('price', parseInt(data.price));
-            formData.append('TeacherId', data.TeacherId);
-            formData.append('SubjectId', data.SubjectId);
-            formData.append('goals', data.goals);
-            console.log(file)
+            formData.append("title", data.title);
+            formData.append("image", file);
+            formData.append("price", parseInt(data.price));
+            formData.append("TeacherId", data.TeacherId);
+            formData.append("SubjectId", data.SubjectId);
+            formData.append("goals", data.goals);
 
-            fetch("https://schools.rescue-palestine.com/api/course/create", {
+            fetch(`${process.env.REACT_APP_API}/api/course/create`, {
               method: "POST",
               body: formData,
             })
               .then((res) => res.json())
               .then((info) => {
-                console.log(info)
+                console.log(info);
               })
               .catch((err) => {
-                console.log(err)
+                console.log(err);
               });
           })}
         >
@@ -245,7 +296,7 @@ const Courses = () => {
                 labelId="demo-simple-select-label"
                 id="demo-simple-select"
                 label={"اسم المادة"}
-                {...register('SubjectId')}
+                {...register("SubjectId")}
               >
                 {subjects?.map((e, i) => (
                   <MenuItem key={e.id} value={e.id}>
@@ -278,23 +329,108 @@ const Courses = () => {
                   <Typography variant="p" sx={{ padding: "5px" }}>
                     إضافة صورة
                   </Typography>
-                  <input onChange={e=> setFile(e.target.files[0])} style={{ display: "none" }} type={"file"} />
+                  <input
+                    onChange={(e) => setFile(e.target.files[0])}
+                    style={{ display: "none" }}
+                    type={"file"}
+                  />
                 </Stack>
               </label>
             </Box>
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpenAdd(false)}>إلغاء</Button>
-            <Button type="submit">موافق</Button>
+            <Button type="submit" onClick={() => setOpenAdd(false)}>
+              موافق
+            </Button>
           </DialogActions>
         </form>
       </Dialog>
-      <Dialog
-        open={openEdit}
-        handleClose={() => setOpenEdit(false)}
-        inputs={["اسم الدورة", "اسم المادة", "المرحلة", "السنة"]}
-        title={"تعديل الدورة"}
-      />
+      {/* EDIT DIALOG */}
+      <Dialog open={openEdit} onClose={() => setOpenEdit(false)}>
+        <form
+          onSubmit={handleSubmit((data) => {
+            fetch(`${process.env.REACT_APP_API}/api/course/${editCourse.id}`, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                title: data.editTitle,
+                goals: data.editGoals,
+                TeacherId: data.editTeacher,
+                price: data.editPrice,
+              }),
+            })
+              .then((res) => res.json())
+              .then((info) => {
+                console.log(info);
+              })
+              .catch((err) => {
+                console.log(err);
+              });
+          })}
+        >
+          <DialogTitle>تعديل دورة</DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              id="name"
+              label={"اسم الدورة"}
+              type="text"
+              fullWidth
+              defaultValue={editCourse.title}
+              variant="standard"
+              {...register("editTitle")}
+            />
+            <TextField
+              autoFocus
+              margin="dense"
+              id="name"
+              label={"هدف الدورة"}
+              type="text"
+              fullWidth
+              defaultValue={editCourse.goals}
+              variant="standard"
+              {...register("editGoals")}
+            />
+            <TextField
+              autoFocus
+              margin="dense"
+              id="name"
+              label={"سعر الدورة"}
+              type="number"
+              fullWidth
+              defaultValue={+editCourse.price}
+              variant="standard"
+              {...register("editPrice")}
+            />
+            <FormControl fullWidth sx={{ marginTop: "20px" }}>
+              <InputLabel id="demo-simple-select-label">معلم الدورة</InputLabel>
+              <Select
+                labelId="demo-simple-select-label"
+                id="demo-simple-select"
+                label={"معلم الدورة"}
+                defaultValue={editCourse.TeacherId}
+                {...register("editTeacher")}
+              >
+                {teachers?.map((e, i) => (
+                  <MenuItem key={e.id} value={e.id}>
+                    {e.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenEdit(false)}>إلغاء</Button>
+            <Button type="submit" onClick={() => setOpenEdit(false)}>
+              موافق
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
     </div>
   );
 };

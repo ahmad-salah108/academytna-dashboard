@@ -152,7 +152,7 @@ export default function Main() {
                       justifyContent: "center",
                     }}
                   >
-                    <AutoStoriesIcon />
+                    <LaptopChromebookIcon />
                   </ListItemIcon>
                   <ListItemText
                     primary={"الدورات"}
