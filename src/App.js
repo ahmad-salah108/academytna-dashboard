@@ -28,6 +28,10 @@ const router = createBrowserRouter([
     errorElement: <h1 sx={{textAlign: 'center'}}>Page not found 404</h1>,
     children: [
       {
+        index: true,
+        element: <Courses/>,
+      },
+      {
         path: 'courses',
         element: <Courses/>,
       },
