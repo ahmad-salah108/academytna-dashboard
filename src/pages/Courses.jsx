@@ -180,7 +180,7 @@ const Courses = () => {
                         </Button>
                       </Tooltip>
                       <Tooltip
-                        title={"الانتقال الى وحدة الدورة"}
+                        title={"الانتقال الى وحدات الدورة"}
                         placement="bottom"
                       >
                         <Link to={`${e.id}`}>
@@ -189,6 +189,7 @@ const Courses = () => {
                           </Button>
                         </Link>
                       </Tooltip>
+                      
                       <Tooltip title={"حذف الدورة"} placement="bottom">
                         <Button onClick={()=>deleteCourse(e)} color={"danger"}>
                           <DeleteIcon />
@@ -221,6 +222,7 @@ const Courses = () => {
             formData.append("TeacherId", data.TeacherId);
             formData.append("SubjectId", data.SubjectId);
             formData.append("goals", data.goals);
+            console.log(file)
 
             fetch(`${process.env.REACT_APP_API}/api/course/create`, {
               method: "POST",

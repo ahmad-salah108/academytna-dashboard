@@ -14,6 +14,8 @@ import Courses from "./pages/Courses";
 import Units from "./pages/Units";
 import Lessons from "./pages/Lessons";
 import Subjects from "./pages/Subjects";
+import Exams from './pages/Exams'
+import Questions from './pages/Questions'
 
 // Create rtl cache
 const cacheRtl = createCache({
@@ -36,12 +38,20 @@ const router = createBrowserRouter([
         element: <Courses/>,
       },
       {
+        path: 'courses/:CourseId/unit/:unitId/exams',
+        element: <Exams/>,
+      },
+      {
         path: 'courses/:CourseId',
         element: <Units/>,
       },
       {
         path: 'courses/:CourseId/:UnitId',
         element: <Lessons/>,
+      },
+      {
+        path: 'courses/:CourseId/unit/:unitId/exams/:examId/questions',
+        element: <Questions/>,
       },
       {
         path: 'subjects',

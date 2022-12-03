@@ -7,9 +7,6 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
-import { theme } from "../theme";
-import QuizIcon from '@mui/icons-material/Quiz';
-
 import {
   Box,
   Button,
@@ -22,16 +19,18 @@ import {
   Typography,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
 import ReplyIcon from "@mui/icons-material/Reply";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Dialog from "@mui/material/Dialog";
 import { useForm } from "react-hook-form";
 import { ClipLoader } from "react-spinners";
+import EditExamDialog from "../components/EditExamDialog";
 
 const columns = [
   { id: "name", label: "الرقم", minWidth: 170, align: "center" },
-  { id: "code", label: "اسم الوحدة", minWidth: 100, align: "center" },
+  { id: "code", label: "اسم الاختبار", minWidth: 100, align: "center" },
+  { id: "duration", label: "مدة الاختبار بالدقائق", minWidth: 100, align: "center" },
+  { id: "number", label: "عدد الأسئلة", minWidth: 100, align: "center" },
   {
     id: "density",
     label: "الاجراءات",
@@ -46,17 +45,17 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   color: theme.palette.primary.contrastText,
 }));
 
-const Courses = () => {
+const Exams = () => {
+  const [openExam, setOpenExam] = React.useState(false);
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [openEdit, setOpenEdit] = React.useState(false);
-  const [openAdd, setOpenAdd] = React.useState(false);
   const { register, handleSubmit } = useForm();
   const params = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [allUnits, setAllUnits] = useState([]);
-  const [editUnit, setEditUnit] = useState({});
+  const [allExams, setAllExams] = useState([]);
+  const [ExamEdit,setExamEdit] = useState({})
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -67,20 +66,11 @@ const Courses = () => {
     setPage(0);
   };
 
-  const unitDelete = (unit) => {
-    fetch(`${process.env.REACT_APP_API}/api/unit/${unit.id}`, {
-      method: "DELETE",
-    })
-      .then((res) => res.json())
-      .then((data) => console.log(data))
-      .catch((err) => console.log(err));
-  };
-
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API}/api/unit/course/${params.CourseId}`)
+    fetch(`${process.env.REACT_APP_API}/api/unit/exams/${params.unitId}`)
       .then((res) => res.json())
       .then((data) => {
-        setAllUnits(data.units);
+        setAllExams(data.exams);
         setLoading(false);
       });
   }, []);
@@ -91,16 +81,16 @@ const Courses = () => {
         variant="h3"
         sx={{ marginBottom: "20px", marginTop: "-16px" }}
       >
-        الوحدات
+        الاختبارات
       </Typography>
       <Box sx={{ display: "flex", justifyContent: "space-between" }}>
         <Button
           sx={{ marginBottom: "20px" }}
           color="success"
           variant="contained"
-          onClick={() => setOpenAdd(true)}
+          onClick={() => setOpenExam(true)}
         >
-          + إضافة وحدة
+          + إضافة اختبار
         </Button>
         <Button
           sx={{ marginBottom: "20px" }}
@@ -139,17 +129,19 @@ const Courses = () => {
                 aria-label="Loading Spinner"
                 data-testid="loader"
               />
-              {allUnits
+              {allExams
                 ?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((e, i) => (
                   <TableRow key={i + "g"} hover role="checkbox" tabIndex={-1}>
                     <TableCell align="center">{e.id}</TableCell>
                     <TableCell align="center">{e.title}</TableCell>
+                    <TableCell align="center">{e.duration}</TableCell>
+                    <TableCell align="center">{e.questionsNumber}</TableCell>
                     <TableCell align="center">
-                      <Tooltip title={"تعديل الوحدة"} placement="bottom">
+                      <Tooltip title={"تعديل الاختبار"} placement="bottom">
                         <Button
                           onClick={() => {
-                            setEditUnit(e);
+                            setExamEdit(e)
                             setOpenEdit(true);
                           }}
                         >
@@ -157,29 +149,14 @@ const Courses = () => {
                         </Button>
                       </Tooltip>
                       <Tooltip
-                        title={"الانتقال الى دروس الوحدة"}
+                        title={"الانتقال الى أسئلة الاختبار"}
                         placement="bottom"
                       >
-                        <Link to={`${e.id}`}>
+                        <Link to={`${e.id}/questions`}>
                           <Button>
                             <ReplyIcon />
                           </Button>
                         </Link>
-                      </Tooltip>
-                      <Tooltip
-                        title={"الانتقال الى اختبارات الوحدة"}
-                        placement="bottom"
-                      >
-                        <Link to={`unit/${e.id}/exams`}>
-                          <Button>
-                            <QuizIcon />
-                          </Button>
-                        </Link>
-                      </Tooltip>
-                      <Tooltip title={"حذف الوحدة"} placement="bottom">
-                        <Button onClick={()=>{unitDelete(e)}} color={"danger"}>
-                          <DeleteIcon />
-                        </Button>
                       </Tooltip>
                     </TableCell>
                   </TableRow>
@@ -190,24 +167,26 @@ const Courses = () => {
         <TablePagination
           rowsPerPageOptions={[10, 25, 100]}
           component="div"
-          count={allUnits.length}
+          count={allExams?.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Paper>
-      <Dialog open={openAdd} onClose={() => setOpenAdd(false)}>
+      <Dialog open={openExam} onClose={() => setOpenExam(false)}>
         <form
           onSubmit={handleSubmit((data) => {
-            fetch(`${process.env.REACT_APP_API}/api/unit/create`, {
+            fetch(`${process.env.REACT_APP_API}/api/exam/create`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
                 title: data.title,
-                CourseId: params.CourseId,
+                duration: data.duration,
+                questionsNumber: data.numberOfQuestions,
+                UnitId:params.unitId
               }),
             })
               .then((res) => res.json())
@@ -219,73 +198,51 @@ const Courses = () => {
               });
           })}
         >
-          <DialogTitle>إضافة وحدة</DialogTitle>
+          <DialogTitle>إضافة اختبار</DialogTitle>
           <DialogContent>
             <TextField
               autoFocus
               margin="dense"
               id="name"
-              label={"اسم الوحدة"}
+              label={"اسم الاختبار"}
               type="text"
               fullWidth
               variant="standard"
               {...register("title")}
             />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenAdd(false)}>إلغاء</Button>
-            <Button type="submit" onClick={() => setOpenAdd(false)}>
-              موافق
-            </Button>
-          </DialogActions>
-        </form>
-      </Dialog>
-      {/* EDIT DIALOG */}
-      <Dialog open={openEdit} onClose={() => setOpenEdit(false)}>
-        <form
-          onSubmit={handleSubmit((data) => {
-            fetch(`${process.env.REACT_APP_API}/api/unit/${editUnit.id}`, {
-              method: "PUT",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                title: data.editTitle,
-              }),
-            })
-              .then((res) => res.json())
-              .then((info) => {
-                console.log(info);
-              })
-              .catch((err) => {
-                console.log(err);
-              });
-          })}
-        >
-          <DialogTitle>تعديل الوحدة</DialogTitle>
-          <DialogContent>
             <TextField
               autoFocus
               margin="dense"
               id="name"
-              label={"اسم الوحدة"}
+              label={"مدة الاختبار بالدقائق"}
               type="text"
               fullWidth
               variant="standard"
-              defaultValue={editUnit.title}
-              {...register("editTitle")}
+              {...register("duration")}
+            />
+            <TextField
+              autoFocus
+              margin="dense"
+              id="name"
+              label={"عدد الأسئلة"}
+              type="text"
+              fullWidth
+              variant="standard"
+              {...register("numberOfQuestions")}
             />
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setOpenEdit(false)}>إلغاء</Button>
-            <Button type="submit" onClick={() => setOpenEdit(false)}>
+            <Button onClick={() => setOpenExam(false)}>إلغاء</Button>
+            <Button type="submit" onClick={() => setOpenExam(false)}>
               موافق
             </Button>
           </DialogActions>
         </form>
       </Dialog>
+      <Dialog open={openEdit} onClose={() => setOpenEdit(false)}>
+          <EditExamDialog exam={ExamEdit} setOpenEdit={setOpenEdit}/>
+      </Dialog>
     </div>
   );
 };
-
-export default Courses;
+export default Exams;

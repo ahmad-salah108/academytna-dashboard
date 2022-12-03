@@ -100,6 +100,7 @@ const Courses = () => {
         الدروس
       </Typography>
       <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+        <Box>
         <Button
           sx={{ marginBottom: "20px" }}
           color="success"
@@ -108,6 +109,7 @@ const Courses = () => {
         >
           + إضافة درس
         </Button>
+        </Box>
         <Button
           sx={{ marginBottom: "20px" }}
           variant="contained"
