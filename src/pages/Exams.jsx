@@ -152,7 +152,7 @@ const Exams = () => {
                         title={"الانتقال الى أسئلة الاختبار"}
                         placement="bottom"
                       >
-                        <Link to={`${e.id}/questions`}>
+                        <Link to={`/courses/${params.CourseId}/unit/${params.unitId}/exams/${e.id}/questions`}>
                           <Button>
                             <ReplyIcon />
                           </Button>

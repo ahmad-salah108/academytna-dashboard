@@ -183,7 +183,7 @@ const Courses = () => {
                         title={"الانتقال الى وحدات الدورة"}
                         placement="bottom"
                       >
-                        <Link to={`${e.id}`}>
+                        <Link to={`/courses/${e.id}`}>
                           <Button>
                             <ReplyIcon />
                           </Button>

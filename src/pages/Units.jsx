@@ -160,7 +160,7 @@ const Courses = () => {
                         title={"الانتقال الى دروس الوحدة"}
                         placement="bottom"
                       >
-                        <Link to={`${e.id}`}>
+                        <Link to={`/courses/${params.CourseId}/${e.id}`}>
                           <Button>
                             <ReplyIcon />
                           </Button>
@@ -170,7 +170,7 @@ const Courses = () => {
                         title={"الانتقال الى اختبارات الوحدة"}
                         placement="bottom"
                       >
-                        <Link to={`unit/${e.id}/exams`}>
+                        <Link to={`/courses/${params.CourseId}/unit/${e.id}/exams`}>
                           <Button>
                             <QuizIcon />
                           </Button>
